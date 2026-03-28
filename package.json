@@ -1,0 +1,12 @@
+{
+  "name": "pattern-slate-generator",
+  "version": "1.0.0",
+  "description": "Video test pattern and E2 slate generator for broadcast/live production",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

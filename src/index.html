@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlateGen</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Sidebar ──────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="logo-mark">▣</span>
+        <h1>Slate<span class="accent">Gen</span></h1>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-tabs">
+        <button class="tab-btn active" data-mode="slate">Slate</button>
+        <button class="tab-btn" data-mode="pattern">Test Pattern</button>
+      </div>
+
+      <!-- Scrollable controls -->
+      <div class="sidebar-scroll">
+
+        <!-- ── Common Settings ───────────────────────────── -->
+        <div class="section">
+          <div class="section-title">Output</div>
+
+          <div class="field">
+            <label>Background Color</label>
+            <div class="color-row">
+              <input type="color" id="bgColor" value="#000000">
+              <input type="text"  id="bgColorHex" value="#000000" class="hex-input" maxlength="7" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Resolution</label>
+            <select id="resolution">
+              <option value="1920x1080">1920 × 1080 — HD</option>
+              <option value="3840x2160">3840 × 2160 — 4K UHD</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+
+          <div class="field" id="customResField" style="display:none">
+            <label>Custom Size (px)</label>
+            <div class="res-row">
+              <input type="number" id="customW" value="1920" min="1" max="16000" placeholder="W">
+              <span class="res-sep">×</span>
+              <input type="number" id="customH" value="1080" min="1" max="16000" placeholder="H">
+              <button class="btn-apply" id="applyResBtn">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Slate Settings ────────────────────────────── -->
+        <div class="section" id="slateSettings">
+          <div class="section-title">Slate</div>
+
+          <div class="field">
+            <label>Text Color</label>
+            <div class="color-row">
+              <input type="color" id="textColor" value="#ffffff">
+              <input type="text"  id="textColorHex" value="#ffffff" class="hex-input" maxlength="7" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Font Size</label>
+            <div class="slider-row">
+              <input type="range" id="fontSizeSlider" min="4" max="30" value="12" step="1">
+              <span id="fontSizeVal" class="slider-val">12%</span>
+            </div>
+          </div>
+
+          <!-- Single / Batch subtabs -->
+          <div class="subtabs">
+            <button class="subtab-btn active" data-subtab="single">Single</button>
+            <button class="subtab-btn" data-subtab="batch">Batch</button>
+          </div>
+
+          <!-- Single -->
+          <div id="singleSlate">
+            <div class="field">
+              <label>Title / Name</label>
+              <input type="text" id="slateTitle" value="CAMERA 1" placeholder="Enter label…">
+            </div>
+            <div class="field">
+              <label>Subtitle (optional)</label>
+              <input type="text" id="slateSubtitle" placeholder="Show name, input #, etc.">
+            </div>
+          </div>
+
+          <!-- Batch -->
+          <div id="batchSlate" style="display:none">
+
+            <!-- Add-row builder -->
+            <div class="batch-builder">
+              <div class="field">
+                <label>Name</label>
+                <input type="text" id="batchName" value="Camera" placeholder="Camera">
+              </div>
+              <div class="batch-builder-row">
+                <div class="field batch-builder-col">
+                  <label>Color</label>
+                  <div class="color-row">
+                    <input type="color" id="batchBgColor" value="#000000">
+                    <input type="text"  id="batchBgColorHex" value="#000000" class="hex-input" maxlength="7" spellcheck="false">
+                  </div>
+                </div>
+                <div class="field batch-builder-col-sm">
+                  <label>Amount</label>
+                  <input type="number" id="batchAmount" value="1" min="1" max="500">
+                </div>
+              </div>
+              <button class="btn-secondary full" id="addRowsBtn">＋ Add Row(s)</button>
+            </div>
+
+            <!-- Generated item list -->
+            <div id="batchListWrap" style="display:none">
+              <div class="batch-list-header">
+                <span id="batchListCount" class="batch-count"></span>
+                <button class="btn-ghost-sm" id="clearBatchBtn">Clear all</button>
+              </div>
+              <div id="batchList" class="batch-list"></div>
+            </div>
+
+            <!-- Export controls (shown once list has items) -->
+            <div id="batchExportWrap" style="display:none">
+              <div class="field">
+                <label>Filename Prefix (optional)</label>
+                <input type="text" id="batchPrefix" placeholder="e.g. show_">
+              </div>
+              <button class="btn-primary full" id="batchGenBtn">
+                <span class="btn-icon">⬇</span> Export All Slates
+              </button>
+            </div>
+            <div id="batchStatus" class="batch-status"></div>
+          </div>
+        </div>
+
+        <!-- ── Pattern Settings ──────────────────────────── -->
+        <div class="section" id="patternSettings" style="display:none">
+          <div class="section-title">Pattern Elements</div>
+
+          <div class="field">
+            <label>Grid Color</label>
+            <div class="color-row">
+              <input type="color" id="gridColor" value="#ffffff">
+              <input type="text"  id="gridColorHex" value="#ffffff" class="hex-input" maxlength="7" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="checkbox-list">
+            <label class="checkbox-item">
+              <input type="checkbox" id="smpteBars"> SMPTE Color Bars
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="boundaryLines" checked> Border
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="alignCircles" checked> Inscribed Circle
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="gridOverlay" checked> Grid
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="textOverlay" checked> Center Info Text
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="logoOverlay"> Logo
+            </label>
+          </div>
+
+          <!-- Text info fields -->
+          <div id="textOverlayFields">
+            <div class="field">
+              <label>Custom Label</label>
+              <input type="text" id="patternLabel" placeholder="Show / rig name…">
+            </div>
+          </div>
+
+          <!-- Logo upload -->
+          <div id="logoField" style="display:none">
+            <div class="field">
+              <label>Logo Image</label>
+              <button class="btn-secondary" id="loadLogoBtn">Choose Image…</button>
+              <input type="file" id="logoFileInput" accept="image/*" style="display:none">
+              <div id="logoPreview" class="logo-preview"></div>
+            </div>
+            <div class="field">
+              <label>Logo Position</label>
+              <select id="logoPosition">
+                <option value="tl">Top Left</option>
+                <option value="tr">Top Right</option>
+                <option value="bl">Bottom Left</option>
+                <option value="br">Bottom Right</option>
+                <option value="c">Center</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /sidebar-scroll -->
+
+      <!-- Export (single / pattern) -->
+      <div class="sidebar-footer">
+        <button class="btn-primary full" id="exportBtn">
+          <span class="btn-icon">↓</span> Export PNG
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Preview Area ─────────────────────────────────── -->
+    <main class="preview-area">
+      <div class="preview-topbar">
+        <span id="resLabel" class="res-badge">1920 × 1080</span>
+        <span id="modeLabel" class="mode-badge slate-badge">SLATE</span>
+      </div>
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="mainCanvas"></canvas>
+      </div>
+    </main>
+
+  </div><!-- /app -->
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
