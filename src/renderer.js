@@ -587,16 +587,34 @@ function bindUI() {
     const color    = document.getElementById('batchBgColor').value;
     const amount   = Math.max(1, Math.min(500, parseInt(document.getElementById('batchAmount').value, 10) || 1));
 
-    // Find highest existing number for this base name (case-insensitive)
-    const baseLC  = baseName.toLowerCase();
-    let nextIndex = 1;
-    state.batchItems.forEach(item => {
-      const m = item.name.toLowerCase().match(new RegExp('^' + escapeRx(baseLC) + '\\s+(\\d+)$'));
-      if (m) nextIndex = Math.max(nextIndex, parseInt(m[1], 10) + 1);
-    });
+    const letterMatch = baseName.match(/^(.+)\s+([A-Za-z])$/);
 
-    for (let i = 0; i < amount; i++) {
-      state.batchItems.push({ name: `${baseName} ${nextIndex + i}`, bgColor: color });
+    if (letterMatch) {
+      // Letter enumeration: "PPT A" → PPT A, PPT B, PPT C…
+      const prefix     = letterMatch[1];
+      const prefixLC   = prefix.toLowerCase();
+      let nextCode     = letterMatch[2].toUpperCase().charCodeAt(0);
+
+      state.batchItems.forEach(item => {
+        const m = item.name.toLowerCase().match(new RegExp('^' + escapeRx(prefixLC) + '\\s+([a-z])$'));
+        if (m) nextCode = Math.max(nextCode, m[1].toUpperCase().charCodeAt(0) + 1);
+      });
+
+      for (let i = 0; i < amount; i++) {
+        state.batchItems.push({ name: `${prefix} ${String.fromCharCode(nextCode + i)}`, bgColor: color });
+      }
+    } else {
+      // Numeric enumeration: "Camera" → Camera 1, Camera 2…
+      const baseLC  = baseName.toLowerCase();
+      let nextIndex = 1;
+      state.batchItems.forEach(item => {
+        const m = item.name.toLowerCase().match(new RegExp('^' + escapeRx(baseLC) + '\\s+(\\d+)$'));
+        if (m) nextIndex = Math.max(nextIndex, parseInt(m[1], 10) + 1);
+      });
+
+      for (let i = 0; i < amount; i++) {
+        state.batchItems.push({ name: `${baseName} ${nextIndex + i}`, bgColor: color });
+      }
     }
 
     refreshBatchList();
