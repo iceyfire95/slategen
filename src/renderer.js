@@ -22,9 +22,11 @@ const state = {
     smpteBars:    false,
     boundaryLines: true,
     alignCircles:  true,
-    gridOverlay:   false,
+    gridOverlay:   true,
+    gridLabels:    false,
     gridCols:      12,
     gridColor:     '#ffffff',
+    textColor:     '#ffffff',
     textOverlay:   true,
     logoOverlay:   false,
     label:         '',
@@ -165,7 +167,7 @@ function drawCornerTicks(W, H, inset) {
 /** Compute the standard grid dimensions for a given canvas size.
  *  Targets ~square cells. Rows fixed at 8; cols computed and forced even. */
 function gridDims(W, H) {
-  const rows = 8;
+  const rows = 10;
   let cols = Math.round(W / (H / rows));
   if (cols % 2 !== 0) cols += 1;
   return { cols, rows, cellW: W / cols, cellH: H / rows };
@@ -248,9 +250,11 @@ function drawSMPTEBars(W, H) {
 // ── Projector numbered/lettered grid ─────────────────────────────────────────
 function drawProjectorGrid(W, H) {
   const { cols, rows, cellW, cellH } = gridDims(W, H);
+  const halfCols = cols / 2;
+  const halfRows = rows / 2;
 
-  // ── Internal grid lines (white, behind borders/reds) ──────────────────────
-  const thinLW = Math.max(1, Math.round(H * 0.001));
+  // ── Internal grid lines ───────────────────────────────────────────────────
+  const thinLW = Math.max(1, Math.round(H * 0.002));
   ctx.lineWidth   = thinLW;
   ctx.strokeStyle = hexToRgba(state.pattern.gridColor, 0.45);
   ctx.setLineDash([]);
@@ -264,6 +268,46 @@ function drawProjectorGrid(W, H) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
 
+  if (!state.pattern.gridLabels) return;
+
+  // ── Column labels (top & bottom edges) ───────────────────────────────────
+  const colLabelSz = Math.round(Math.min(cellH, cellW) * 0.45);
+  ctx.font      = `700 ${colLabelSz}px Arial, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  const vPad    = cellH * 0.12;
+
+  for (let c = 0; c < cols; c++) {
+    const cx  = (c + 0.5) * cellW;
+    const num = c < halfCols ? (c - halfCols) : (c - halfCols + 1);
+    const lbl = String(num);
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(lbl, cx, vPad);
+
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(lbl, cx, H - vPad);
+  }
+
+  // ── Row labels (left & right edges) ──────────────────────────────────────
+  const upperLetters = 'ABCDE'.slice(0, halfRows).split('').reverse(); // E,D,C,B,A
+  const lowerLetters = 'abcde'.slice(0, halfRows).split('');           // a,b,c,d,e
+
+  const rowLabelSz = Math.round(Math.min(cellH, cellW) * 0.45);
+  ctx.font      = `700 ${rowLabelSz}px Arial, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  const hPad    = cellW * 0.15;
+
+  for (let r = 0; r < rows; r++) {
+    if (r === 0 || r === rows - 1) continue; // skip corners to avoid overlap
+    const cy  = (r + 0.5) * cellH;
+    const lbl = r < halfRows ? upperLetters[r] : lowerLetters[r - halfRows];
+
+    ctx.textAlign = 'left';  ctx.textBaseline = 'middle';
+    ctx.fillText(lbl, hPad, cy);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(lbl, W - hPad, cy);
+  }
 }
 
 // ── Green border ──────────────────────────────────────────────────────────────
@@ -276,17 +320,27 @@ function drawProjectorBorder(W, H) {
   ctx.strokeRect(half, half, W - borderLW, H - borderLW);
 }
 
-// ── Large inscribed circle (radius = H/2) ─────────────────────────────────────
+// ── Inscribed circle + corner diagonals + center crosshair ────────────────────
 function drawInscribedCircle(W, H) {
   const cx = W / 2, cy = H / 2;
-  const r  = H / 2;
   const lw = Math.max(1, Math.round(H * 0.0015));
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
   ctx.lineWidth   = lw;
   ctx.setLineDash([]);
+
+  // Corner-to-corner diagonals
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W, 0); ctx.lineTo(0, H); ctx.stroke();
+
+  // Center crosshair
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+
+  // Inscribed circle
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.arc(cx, cy, H / 2, 0, Math.PI * 2);
   ctx.stroke();
 }
 
@@ -310,7 +364,7 @@ function drawProjectorText(W, H) {
   const lineGap    = baseFontSz * 0.25;
   const totalH     = lines.reduce((sum, l) => sum + baseFontSz * l.scale, 0)
                    + lineGap * (lines.length - 1);
-  let y = H / 2 - totalH / 2;
+  let y = H / 2 - totalH / 2 - H * 0.15;
 
   ctx.shadowColor   = 'rgba(0,0,0,0.85)';
   ctx.shadowBlur    = baseFontSz * 0.3;
@@ -320,7 +374,7 @@ function drawProjectorText(W, H) {
   lines.forEach(line => {
     const sz = Math.round(baseFontSz * line.scale);
     ctx.font         = `${line.bold ? '700' : '400'} ${sz}px Arial, sans-serif`;
-    ctx.fillStyle    = line.bold ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.82)';
+    ctx.fillStyle    = line.bold ? hexToRgba(state.pattern.textColor, 1) : hexToRgba(state.pattern.textColor, 0.82);
     ctx.textBaseline = 'top';
     ctx.fillText(line.text, W / 2, Math.round(y));
     y += sz + lineGap;
@@ -402,6 +456,9 @@ function bindUI() {
   // ── Grid color ─────────────────────────────────────────────────────────────
   bindColorPair('gridColor', 'gridColorHex', v => { state.pattern.gridColor = v; render(); });
 
+  // ── Pattern text color ─────────────────────────────────────────────────────
+  bindColorPair('patternTextColor', 'patternTextColorHex', v => { state.pattern.textColor = v; render(); });
+
   // ── Font size slider ───────────────────────────────────────────────────────
   document.getElementById('fontSizeSlider').addEventListener('input', e => {
     state.fontSizePct = Number(e.target.value);
@@ -449,6 +506,7 @@ function bindUI() {
     boundaryLines: 'boundaryLines',
     alignCircles:  'alignCircles',
     gridOverlay:   'gridOverlay',
+    gridLabels:    'gridLabels',
     textOverlay:   'textOverlay',
     logoOverlay:   'logoOverlay',
   };
@@ -457,9 +515,6 @@ function bindUI() {
     document.getElementById(id).addEventListener('change', e => {
       state.pattern[key] = e.target.checked;
 
-      if (id === 'gridOverlay') {
-        document.getElementById('gridDensityField').style.display = e.target.checked ? '' : 'none';
-      }
       if (id === 'textOverlay') {
         document.getElementById('textOverlayFields').style.display = e.target.checked ? '' : 'none';
       }
@@ -468,13 +523,6 @@ function bindUI() {
       }
       render();
     });
-  });
-
-  // Grid density
-  document.getElementById('gridCols').addEventListener('input', e => {
-    state.pattern.gridCols = Number(e.target.value);
-    document.getElementById('gridColsVal').textContent = e.target.value;
-    render();
   });
 
   // Pattern label

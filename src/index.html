@@ -163,13 +163,16 @@
               <input type="checkbox" id="boundaryLines" checked> Border
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" id="alignCircles" checked> Inscribed Circle
+              <input type="checkbox" id="alignCircles" checked> Circle
             </label>
             <label class="checkbox-item">
               <input type="checkbox" id="gridOverlay" checked> Grid
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" id="textOverlay" checked> Center Info Text
+              <input type="checkbox" id="gridLabels"> Grid Labels
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="textOverlay" checked> Info
             </label>
             <label class="checkbox-item">
               <input type="checkbox" id="logoOverlay"> Logo
@@ -181,6 +184,13 @@
             <div class="field">
               <label>Custom Label</label>
               <input type="text" id="patternLabel" placeholder="Show / rig name…">
+            </div>
+            <div class="field">
+              <label>Text Color</label>
+              <div class="color-row">
+                <input type="color" id="patternTextColor" value="#ffffff">
+                <input type="text"  id="patternTextColorHex" value="#ffffff" class="hex-input" maxlength="7" spellcheck="false">
+              </div>
             </div>
           </div>
 
