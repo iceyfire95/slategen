@@ -10,5 +10,8 @@ PatternGen is a desktop app for broadcast and live production that generates PNG
 git clone https://github.com/your-username/slategen.git
 cd slategen
 npm install
+npm audit fix --force
 npm start
 ```
+## Future
+Test pattern function is very early days and needs a lot of work
